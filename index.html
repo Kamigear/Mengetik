@@ -2,23 +2,36 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Tantangan Mengetik Indonesia</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --sat: env(safe-area-inset-top);
+            --sab: env(safe-area-inset-bottom);
+        }
+        
+        html, body {
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+            position: fixed; /* Kunci total di level root */
+            background-color: #0f172a;
+        }
+
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #0f172a;
             color: #f8fafc;
-            touch-action: manipulation;
-            overflow: hidden;
-            height: 100vh;
-            width: 100vw;
-            position: fixed; /* Mencegah seluruh body ter-scroll */
+            touch-action: none; /* Cegah semua gestur browser default */
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
         }
+
         .mono { font-family: 'JetBrains Mono', monospace; }
-        .char { display: inline; border-bottom: 2px solid transparent; transition: all 0.05s; }
+        
+        .char { display: inline; border-bottom: 2px solid transparent; transition: all 0.05s; white-space: pre-wrap; }
         .char.current {
             background-color: #334155;
             border-bottom: 2px solid #38bdf8;
@@ -28,28 +41,39 @@
         .char.correct { color: #4ade80; }
         .char.incorrect { color: #f87171; background-color: rgba(248, 113, 113, 0.2); }
         
+        /* Input diletakkan di tengah viewport agar tidak memicu scroll berlebih */
         #hidden-input {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 0;
-            height: 0;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 1px;
+            height: 1px;
             opacity: 0;
+            border: none;
+            padding: 0;
+            margin: 0;
             z-index: -1;
+            pointer-events: none;
         }
 
         #game-container {
+            touch-action: pan-y; /* Hanya izinkan scroll vertikal di dalam container */
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
         }
-        #game-container::-webkit-scrollbar {
-            display: none;
+        #game-container::-webkit-scrollbar { display: none; }
+        
+        /* Mematikan interaksi elemen UI saat game aktif */
+        .game-active .no-interact {
+            pointer-events: none;
+            user-select: none;
         }
     </style>
 </head>
-<body class="flex flex-col p-4">
+<body class="safe-area-padding">
 
-    <div class="flex-1 flex flex-col max-w-4xl w-full mx-auto overflow-hidden">
+    <div id="main-wrapper" class="flex-1 flex flex-col max-w-4xl w-full mx-auto overflow-hidden no-interact">
         <!-- Stats Section -->
         <div class="flex justify-between items-center mb-4 bg-slate-800/50 p-4 rounded-2xl border border-slate-700 shrink-0">
             <div class="text-center flex-1">
@@ -68,16 +92,17 @@
 
         <!-- Display Area -->
         <div id="game-container" class="relative flex-1 bg-slate-800 rounded-3xl p-6 border border-slate-700 mb-4 overflow-y-auto shadow-2xl">
-            <div id="text-display" class="mono text-2xl md:text-3xl leading-relaxed text-slate-400 select-none break-words text-left pb-20">
-                Klik tombol mulai untuk menguji kecepatan jari Anda.
+            <div id="text-display" class="mono text-2xl md:text-3xl leading-relaxed text-slate-400 select-none break-words text-left pb-32">
+                Tekan tombol di bawah untuk memulai tantangan mengetik.
             </div>
             
+            <!-- Input Pemicu Keyboard -->
             <input type="text" id="hidden-input" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="text">
 
             <div id="start-overlay" class="absolute inset-0 bg-slate-800/98 rounded-3xl flex flex-col items-center justify-center z-10 text-center p-6">
-                <h1 class="text-3xl font-black text-sky-400 mb-2">KetikCepat.id</h1>
-                <p class="text-slate-400 text-sm mb-8 italic">Tekan mulai untuk memunculkan keyboard sistem.</p>
-                <button onclick="startGame()" class="bg-sky-500 hover:bg-sky-400 text-white px-10 py-4 rounded-2xl font-bold text-xl transition-all shadow-lg shadow-sky-500/20 active:scale-95">
+                <h1 class="text-3xl font-black text-sky-400 mb-2 tracking-tight">KetikCepat.id</h1>
+                <p class="text-slate-400 text-sm mb-8 italic">Gunakan keyboard bawaan HP Anda.</p>
+                <button id="start-btn" onclick="startGame()" class="bg-sky-500 hover:bg-sky-400 text-white px-10 py-4 rounded-2xl font-bold text-xl transition-all shadow-lg shadow-sky-500/20 active:scale-95 pointer-events-auto">
                     Mulai Main
                 </button>
                 <p class="mt-6 text-xs text-slate-500 font-medium">Skor Tertinggi: <span id="highscore" class="font-bold text-sky-400">0</span> WPM</p>
@@ -88,7 +113,7 @@
     <!-- Modal Hasil -->
     <div id="result-modal" class="fixed inset-0 bg-black/95 backdrop-blur-md hidden items-center justify-center z-50 p-6">
         <div class="bg-slate-800 border border-slate-700 p-8 rounded-3xl max-w-sm w-full text-center">
-            <h2 class="text-2xl font-bold mb-1">Hasil Pertandingan</h2>
+            <h2 class="text-2xl font-bold mb-1">Hasil Akhir</h2>
             <div id="new-record-tag" class="hidden inline-block bg-amber-500 text-black text-[10px] font-black px-2 py-0.5 rounded mb-4 italic uppercase">Rekor Baru!</div>
             
             <div class="grid grid-cols-2 gap-3 mb-6">
@@ -114,9 +139,7 @@
             "aku", "kamu", "dia", "mereka", "kita", "makan", "minum", "jalan", "lari", "tidur",
             "belajar", "coding", "kerja", "sekolah", "rumah", "buku", "pintu", "jendela", "langit",
             "bumi", "air", "api", "angin", "panas", "dingin", "sehat", "sakit", "senang", "sedih",
-            "cepat", "lambat", "tinggi", "rendah", "besar", "kecil", "baru", "lama", "tua", "muda",
-            "pagi", "siang", "sore", "malam", "cinta", "semangat", "sukses", "hebat", "pintar",
-            "pahlawan", "bangsa", "merdeka", "negeri", "rakyat", "adil", "makmur", "damai"
+            "cepat", "lambat", "tinggi", "rendah", "besar", "kecil", "baru", "lama", "tua", "muda"
         ];
 
         let currentText = "";
@@ -149,7 +172,7 @@
                 span.innerText = char;
                 textDisplay.appendChild(span);
             });
-            updateCursor(false); // No scroll on generate
+            updateCursor(false);
         }
 
         function updateCursor(shouldScroll = true) {
@@ -159,9 +182,8 @@
                 const target = spans[charIndex];
                 target.classList.add('current');
                 
-                if (shouldScroll) {
-                    // Gunakan nearest agar tidak meloncat ke tengah layar jika sudah terlihat
-                    target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                if (shouldScroll && isPlaying) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             }
         }
@@ -172,11 +194,17 @@
             charIndex = 0;
             mistakes = 0;
             timeLeft = 60;
+            
+            document.body.classList.add('game-active');
             generateText();
             startOverlay.classList.add('hidden');
             
-            hiddenInput.value = "";
-            hiddenInput.focus();
+            // Beri jeda sedikit untuk memastikan layout sudah stabil sebelum fokus
+            setTimeout(() => {
+                hiddenInput.focus();
+                // Paksa scroll window ke paling atas agar tidak bergeser saat keyboard muncul
+                window.scrollTo(0, 0);
+            }, 50);
 
             timerInterval = setInterval(updateTimer, 1000);
         }
@@ -206,37 +234,30 @@
             if (!isPlaying) return;
             
             const val = hiddenInput.value;
-            // Jika input kosong (misal backspace sampai habis)
-            if (val.length === 0 && charIndex > 0) {
-                handleBackspace();
-                return;
-            }
+            if (val.length === 0) return;
 
-            const key = val[val.length - 1]; 
-            processKey(key);
+            const charTyped = val[val.length - 1];
+            processChar(charTyped);
             
-            // Reset input value secara berkala agar tidak terlalu panjang
-            if (val.length > 10) {
-                hiddenInput.value = val.substring(val.length - 1);
+            // Jaga agar input tetap pendek agar tidak memicu scroll horizontal internal
+            if (hiddenInput.value.length > 5) {
+                hiddenInput.value = hiddenInput.value.slice(-1);
             }
         });
 
-        // Dukungan fisik/sistem untuk backspace
         hiddenInput.addEventListener('keydown', (e) => {
             if (e.key === 'Backspace') {
                 handleBackspace();
             }
         });
 
-        function processKey(key) {
+        function processChar(char) {
             const spans = textDisplay.querySelectorAll('span');
             if (charIndex < currentText.length) {
-                if (key === currentText[charIndex]) {
+                if (char === currentText[charIndex]) {
                     spans[charIndex].classList.add('correct');
-                    spans[charIndex].classList.remove('incorrect');
                 } else {
                     spans[charIndex].classList.add('incorrect');
-                    spans[charIndex].classList.remove('correct');
                     mistakes++;
                 }
                 charIndex++;
@@ -261,9 +282,10 @@
         function endGame() {
             clearInterval(timerInterval);
             isPlaying = false;
+            document.body.classList.remove('game-active');
             hiddenInput.blur();
-            const stats = calculateStats();
             
+            const stats = calculateStats();
             document.getElementById('final-wpm').innerText = stats.wpm;
             document.getElementById('final-accuracy').innerText = stats.accuracy;
 
@@ -287,24 +309,24 @@
             wpmEl.innerText = "0";
             accuracyEl.innerText = "0%";
             timerEl.innerText = "60s";
-            textDisplay.innerHTML = "Klik tombol mulai untuk menguji kecepatan jari Anda.";
+            textDisplay.innerHTML = "Tekan tombol di bawah untuk memulai tantangan mengetik.";
         }
 
-        // Mencegah scroll default browser saat fokus input
-        gameContainer.addEventListener('click', (e) => {
+        // Pastikan fokus kembali ke input jika pengguna tidak sengaja menyentuh layar
+        gameContainer.addEventListener('touchstart', (e) => {
             if (isPlaying) {
                 hiddenInput.focus();
-                e.preventDefault();
+                // Cegah perilaku scroll/zoom default saat menyentuh teks
+                if (e.target !== hiddenInput) e.preventDefault();
             }
-        });
+        }, { passive: false });
 
-        // Handle viewport resize (keyboard muncul) tanpa scroll body
-        window.visualViewport.addEventListener('resize', () => {
+        // Mencegah scroll pada level window saat keyboard aktif
+        window.addEventListener('scroll', (e) => {
             if (isPlaying) {
-                window.scrollTo(0, 0); // Paksa body tetap di atas
-                updateCursor(true);
+                window.scrollTo(0, 0);
             }
-        });
+        }, { passive: false });
     </script>
 </body>
 </html>
