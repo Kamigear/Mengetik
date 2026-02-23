@@ -25,31 +25,15 @@
         .char.correct { color: #4ade80; }
         .char.incorrect { color: #f87171; background-color: rgba(248, 113, 113, 0.2); }
         
-        /* Virtual Keyboard Styles */
-        .key {
-            user-select: none;
-            transition: all 0.05s;
-            touch-action: pointer;
-        }
-        .key:active {
-            transform: scale(0.92);
-            background-color: #38bdf8 !important;
-            color: white !important;
-        }
-        .key-active {
-            background-color: #38bdf8 !important;
-            color: white !important;
-            transform: scale(0.92);
-        }
-
-        /* Sembunyikan keyboard di layar lebar (komputer) */
-        @media (min-width: 1024px) {
-            #keyboard-container {
-                display: none;
-            }
-            #typing-input {
-                display: block !important;
-            }
+        /* Input tersembunyi untuk memicu keyboard sistem */
+        #hidden-input {
+            position: absolute;
+            top: -100px;
+            left: -100px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -57,84 +41,37 @@
 
     <div class="flex-1 flex flex-col max-w-4xl w-full mx-auto">
         <!-- Stats Section -->
-        <div class="flex justify-between items-center mb-4 bg-slate-800/50 p-3 rounded-2xl border border-slate-700">
+        <div class="flex justify-between items-center mb-4 bg-slate-800/50 p-4 rounded-2xl border border-slate-700">
             <div class="text-center flex-1">
                 <p class="text-[10px] uppercase tracking-widest text-slate-400">WPM</p>
-                <p id="wpm" class="text-xl font-bold text-sky-400">0</p>
+                <p id="wpm" class="text-2xl font-bold text-sky-400">0</p>
             </div>
             <div class="text-center flex-1 border-x border-slate-700">
                 <p class="text-[10px] uppercase tracking-widest text-slate-400">Akurasi</p>
-                <p id="accuracy" class="text-xl font-bold text-emerald-400">0%</p>
+                <p id="accuracy" class="text-2xl font-bold text-emerald-400">0%</p>
             </div>
             <div class="text-center flex-1">
                 <p class="text-[10px] uppercase tracking-widest text-slate-400">Waktu</p>
-                <p id="timer" class="text-xl font-bold text-amber-400">60s</p>
+                <p id="timer" class="text-2xl font-bold text-amber-400">60s</p>
             </div>
         </div>
 
         <!-- Display Area -->
-        <div class="relative flex-1 bg-slate-800 rounded-2xl p-6 border border-slate-700 mb-4 overflow-y-auto">
-            <div id="text-display" class="mono text-xl md:text-2xl leading-relaxed text-slate-400 select-none break-words text-left">
+        <div id="game-container" class="relative flex-1 bg-slate-800 rounded-3xl p-8 border border-slate-700 mb-4 overflow-y-auto cursor-text shadow-2xl">
+            <div id="text-display" class="mono text-2xl md:text-3xl leading-relaxed text-slate-400 select-none break-words text-left">
                 Klik tombol mulai untuk menguji kecepatan jari Anda.
             </div>
             
-            <!-- Hidden input for Desktop users -->
-            <input type="text" id="typing-input" class="hidden absolute opacity-0 pointer-events-none" autocomplete="off">
+            <!-- Elemen pemicu keyboard sistem -->
+            <input type="text" id="hidden-input" autocomplete="off" autocapitalize="off" spellcheck="false">
 
-            <div id="start-overlay" class="absolute inset-0 bg-slate-800/95 rounded-2xl flex flex-col items-center justify-center z-10 text-center p-4">
-                <h1 class="text-2xl font-black text-sky-400 mb-2">KetikCepat</h1>
-                <p class="text-slate-400 text-sm mb-6 italic" id="instruction-text">Gunakan keyboard untuk mengetik.</p>
-                <button onclick="startGame()" class="bg-sky-500 hover:bg-sky-400 text-white px-8 py-3 rounded-xl font-bold text-lg transition-all shadow-lg shadow-sky-500/20">
+            <div id="start-overlay" class="absolute inset-0 bg-slate-800/98 rounded-3xl flex flex-col items-center justify-center z-10 text-center p-6">
+                <h1 class="text-3xl font-black text-sky-400 mb-2">KetikCepat.id</h1>
+                <p class="text-slate-400 text-sm mb-8 italic">Tekan mulai dan keyboard sistem akan muncul.</p>
+                <button onclick="startGame()" class="bg-sky-500 hover:bg-sky-400 text-white px-10 py-4 rounded-2xl font-bold text-xl transition-all shadow-lg shadow-sky-500/20 active:scale-95">
                     Mulai Main
                 </button>
-                <p class="mt-4 text-xs text-slate-500">Skor Tertinggi: <span id="highscore" class="font-bold">0</span> WPM</p>
-            </div>
-        </div>
-
-        <!-- Virtual Keyboard Section (Only for Mobile) -->
-        <div id="keyboard-container" class="bg-slate-900/50 p-2 rounded-2xl border border-slate-800 select-none mb-2">
-            <!-- Row 1 -->
-            <div class="flex justify-center gap-1 mb-1">
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="q">Q</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="w">W</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="e">E</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="r">R</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="t">T</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="y">Y</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="u">U</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="i">I</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="o">O</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="p">P</button>
-            </div>
-            <!-- Row 2 -->
-            <div class="flex justify-center gap-1 mb-1 px-4">
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="a">A</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="s">S</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="d">D</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="f">F</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="g">G</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="h">H</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="j">J</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="k">K</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="l">L</button>
-            </div>
-            <!-- Row 3 -->
-            <div class="flex justify-center gap-1">
-                <div class="flex-[0.5]"></div>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="z">Z</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="x">X</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="c">C</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="v">V</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="b">B</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="n">N</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm" data-key="m">M</button>
-                <button class="key flex-1 h-12 bg-slate-800 rounded-lg font-bold text-sm flex items-center justify-center" data-key="backspace">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
-                </button>
-            </div>
-            <!-- Row 4 -->
-            <div class="flex justify-center mt-1">
-                <button class="key w-full h-12 bg-slate-700 rounded-lg font-bold text-sm tracking-widest" data-key=" ">S P A C E</button>
+                <p class="mt-6 text-xs text-slate-500">Skor Tertinggi: <span id="highscore" class="font-bold">0</span> WPM</p>
             </div>
         </div>
     </div>
@@ -142,22 +79,22 @@
     <!-- Modal Hasil -->
     <div id="result-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden items-center justify-center z-50 p-6">
         <div class="bg-slate-800 border border-slate-700 p-8 rounded-3xl max-w-sm w-full text-center">
-            <h2 class="text-2xl font-bold mb-1">Hasil Anda</h2>
+            <h2 class="text-2xl font-bold mb-1">Hasil Pertandingan</h2>
             <div id="new-record-tag" class="hidden inline-block bg-amber-500 text-black text-[10px] font-black px-2 py-0.5 rounded mb-4 italic">REKOR BARU!</div>
             
             <div class="grid grid-cols-2 gap-3 mb-6">
-                <div class="bg-slate-900/50 p-3 rounded-xl">
+                <div class="bg-slate-900/50 p-4 rounded-xl">
                     <p class="text-xs text-slate-400">Kecepatan</p>
-                    <p class="text-2xl font-bold text-sky-400"><span id="final-wpm">0</span></p>
-                    <p class="text-[10px] text-slate-500 uppercase">WPM</p>
+                    <p class="text-3xl font-bold text-sky-400"><span id="final-wpm">0</span></p>
+                    <p class="text-[10px] text-slate-500 uppercase font-bold">WPM</p>
                 </div>
-                <div class="bg-slate-900/50 p-3 rounded-xl">
+                <div class="bg-slate-900/50 p-4 rounded-xl">
                     <p class="text-xs text-slate-400">Akurasi</p>
-                    <p class="text-2xl font-bold text-emerald-400"><span id="final-accuracy">0</span>%</p>
+                    <p class="text-3xl font-bold text-emerald-400"><span id="final-accuracy">0</span>%</p>
                 </div>
             </div>
 
-            <button onclick="resetGame()" class="w-full bg-sky-500 text-white py-3 rounded-xl font-bold shadow-lg shadow-sky-500/20 active:scale-95 transition-all">
+            <button onclick="resetGame()" class="w-full bg-sky-500 text-white py-4 rounded-xl font-bold shadow-lg shadow-sky-500/20 active:scale-95 transition-all">
                 Coba Lagi
             </button>
         </div>
@@ -216,24 +153,16 @@
         let highscore = localStorage.getItem('typing_mobile_highscore') || 0;
 
         const textDisplay = document.getElementById('text-display');
-        const typingInput = document.getElementById('typing-input');
+        const hiddenInput = document.getElementById('hidden-input');
         const timerEl = document.getElementById('timer');
         const wpmEl = document.getElementById('wpm');
         const accuracyEl = document.getElementById('accuracy');
         const highscoreEl = document.getElementById('highscore');
         const resultModal = document.getElementById('result-modal');
         const startOverlay = document.getElementById('start-overlay');
-        const keys = document.querySelectorAll('.key');
+        const gameContainer = document.getElementById('game-container');
 
         highscoreEl.innerText = highscore;
-
-        // Deteksi jika perangkat adalah mobile/touch
-        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-        if (!isTouchDevice) {
-            document.getElementById('instruction-text').innerText = "Gunakan keyboard fisik untuk mengetik.";
-        } else {
-            document.getElementById('instruction-text').innerText = "Gunakan keyboard di layar untuk mengetik.";
-        }
 
         function generateText() {
             const shuffled = [...kataIndonesia].sort(() => 0.5 - Math.random());
@@ -266,9 +195,9 @@
             generateText();
             startOverlay.classList.add('hidden');
             
-            if (!isTouchDevice) {
-                typingInput.focus();
-            }
+            // Fokus ke input untuk memicu keyboard sistem
+            hiddenInput.value = "";
+            hiddenInput.focus();
 
             timerInterval = setInterval(updateTimer, 1000);
         }
@@ -294,22 +223,36 @@
             return { wpm, accuracy };
         }
 
-        function handleInput(key) {
+        // Event listener untuk input sistem (keyboard bawaan)
+        hiddenInput.addEventListener('input', (e) => {
             if (!isPlaying) return;
-
-            const chars = textDisplay.querySelectorAll('span');
             
-            if (key === 'backspace') {
-                if (charIndex > 0) {
-                    charIndex--;
-                    chars[charIndex].classList.remove('correct', 'incorrect');
-                    updateCursor();
-                }
+            const val = hiddenInput.value;
+            const key = val[val.length - 1]; // Ambil karakter terakhir
+
+            // Jika panjang value berkurang, berarti backspace (sederhananya)
+            if (val.length < charIndex) {
+                // Opsional: Handle backspace
                 return;
             }
 
+            if (key) {
+                processKey(key.toLowerCase());
+            }
+        });
+
+        // Dukungan tambahan untuk backspace dan spasi di beberapa browser mobile
+        hiddenInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace') {
+                handleBackspace();
+            }
+        });
+
+        function processKey(key) {
+            const chars = textDisplay.querySelectorAll('span');
+            
             if (charIndex < currentText.length) {
-                if (key === currentText[charIndex]) {
+                if (key === currentText[charIndex].toLowerCase()) {
                     chars[charIndex].classList.add('correct');
                 } else {
                     chars[charIndex].classList.add('incorrect');
@@ -320,8 +263,17 @@
                 if (charIndex === currentText.length) {
                     generateText();
                     charIndex = 0;
-                    if (!isTouchDevice) typingInput.value = "";
+                    hiddenInput.value = "";
                 }
+                updateCursor();
+            }
+        }
+
+        function handleBackspace() {
+            if (charIndex > 0) {
+                charIndex--;
+                const chars = textDisplay.querySelectorAll('span');
+                chars[charIndex].classList.remove('correct', 'incorrect');
                 updateCursor();
             }
         }
@@ -329,6 +281,7 @@
         function endGame() {
             clearInterval(timerInterval);
             isPlaying = false;
+            hiddenInput.blur(); // Tutup keyboard
             const stats = calculateStats();
             
             document.getElementById('final-wpm').innerText = stats.wpm;
@@ -357,46 +310,10 @@
             textDisplay.innerHTML = "Klik tombol mulai untuk menguji kecepatan jari Anda.";
         }
 
-        // Virtual Keyboard Listeners (Pointer events)
-        keys.forEach(keyBtn => {
-            keyBtn.addEventListener('pointerdown', (e) => {
-                e.preventDefault();
-                const keyVal = keyBtn.getAttribute('data-key');
-                handleInput(keyVal);
-            });
-        });
-
-        // Physical Keyboard Support
-        document.addEventListener('keydown', (e) => {
-            if (!isPlaying && e.key === 'Enter') {
-                if (startOverlay.classList.contains('hidden')) {
-                    resetGame();
-                } else {
-                    startGame();
-                }
-                return;
-            }
-
-            let key = e.key.toLowerCase();
-            
-            // Handle space, backspace, and a-z
-            if (key === 'backspace' || key === ' ' || (key.length === 1 && key >= 'a' && key <= 'z')) {
-                if (key === ' ') e.preventDefault(); // Prevent page scroll
-                handleInput(key);
-                
-                // Highlight virtual key if visible
-                const vKey = document.querySelector(`.key[data-key="${key}"]`);
-                if (vKey) {
-                    vKey.classList.add('key-active');
-                    setTimeout(() => vKey.classList.remove('key-active'), 100);
-                }
-            }
-        });
-
-        // Keep focus on hidden input for desktop
-        document.addEventListener('click', () => {
-            if (isPlaying && !isTouchDevice) {
-                typingInput.focus();
+        // Pastikan keyboard tetap muncul jika area game diklik
+        gameContainer.addEventListener('click', () => {
+            if (isPlaying) {
+                hiddenInput.focus();
             }
         });
     </script>
